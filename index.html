@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>Dino Productivo</title>
+  <link rel="stylesheet" href="estilos.css" />
+</head>
+<body>
+
+  <div id="contenedor-juego">
+    <canvas id="lienzo" role="img" aria-label="Juego: un dino corre por un bosque esquivando distracciones de oficina"></canvas>
+
+    <div id="hud-botones">
+      <button id="boton-silencio" class="boton-icono" aria-label="Silenciar sonido">🔊</button>
+      <button id="boton-pausa" class="boton-icono" aria-label="Pausar">⏸</button>
+    </div>
+
+    <!-- PORTADA -->
+    <div id="pantalla-portada" class="pantalla">
+      <h1>DINO PRODUCTIVO</h1>
+      <p class="subtitulo">Corre, esquiva las distracciones de la oficina.</p>
+      <p class="instrucciones">
+        <strong>Espacio</strong> o <strong>toca la pantalla</strong> para saltar.<br />
+        Pulsa otra vez <strong>en el aire</strong> para el salto doble.
+      </p>
+      <p class="record">Récord: <span id="record-portada">0</span></p>
+      <p class="parpadeo">Pulsa espacio o toca para empezar</p>
+    </div>
+
+    <!-- PAUSA -->
+    <div id="pantalla-pausa" class="pantalla oculto">
+      <h2>PAUSA</h2>
+      <p>Pulsa <strong>P</strong> o el botón de pausa para continuar</p>
+    </div>
+
+    <!-- FIN DE PARTIDA -->
+    <div id="pantalla-fin" class="pantalla oculto">
+      <h2>SE TE FUE LA ENERGÍA</h2>
+      <p class="puntuacion-final"><span id="fin-puntuacion">0</span></p>
+      <p class="record">Récord: <span id="fin-record">0</span></p>
+      <p class="parpadeo">Pulsa espacio, Enter o toca para volver a intentarlo</p>
+    </div>
+  </div>
+
+  <script src="js/1-ajustes.js"></script>
+  <script src="js/2-sonido.js"></script>
+  <script src="js/3-entradas.js"></script>
+  <script src="js/4-dibujo.js"></script>
+  <script src="js/5-mundo.js"></script>
+  <script src="js/7-records.js"></script>
+  <script src="js/6-juego.js"></script>
+  <script>
+    // Escalado responsive: el juego "piensa" siempre en 960x420,
+    // esto solo ajusta cómo se ve en la pantalla real (nitidez incluida).
+    (function () {
+      const lienzo = document.getElementById('lienzo');
+      const ctx = lienzo.getContext('2d');
+      const ANCHO_LOGICO = AJUSTES.anchoLogico;
+      const ALTO_LOGICO = AJUSTES.altoLogico;
+
+      function ajustar() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const rect = lienzo.getBoundingClientRect();
+        lienzo.width = Math.max(1, Math.round(rect.width * dpr));
+        lienzo.height = Math.max(1, Math.round(rect.height * dpr));
+        const escala = lienzo.width / ANCHO_LOGICO;
+        ctx.setTransform(escala, 0, 0, escala, 0, 0);
+        // Cambiar width/height resetea el contexto: hay que volver a
+        // desactivar el suavizado o el dino pixel art saldría borroso.
+        ctx.imageSmoothingEnabled = false;
+      }
+
+      window.addEventListener('resize', ajustar);
+      window.addEventListener('orientationchange', ajustar);
+      ajustar();
+    })();
+  </script>
+</body>
+</html>
