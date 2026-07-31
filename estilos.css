@@ -79,6 +79,7 @@ html, body {
   background: rgba(14, 42, 51, 0.72);
   padding: 24px;
   z-index: 4;
+  overflow-y: auto;
 }
 
 .pantalla.oculto {
@@ -139,6 +140,114 @@ html, body {
   font-size: 14px;
   opacity: 0.8;
   animation: parpadear 1.1s infinite;
+}
+
+.panel-nombre {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 14px 18px;
+  border-radius: 12px;
+  margin: 4px 0;
+}
+
+.panel-nombre.oculto {
+  display: none;
+}
+
+.panel-nombre p {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+#input-nombre {
+  width: 100%;
+  max-width: 220px;
+  font-size: 15px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 248, 231, 0.4);
+  background: #FFF8E7;
+  color: #0E2A33;
+  text-align: center;
+}
+
+#input-nombre:focus {
+  outline: 2px solid #17D9C4;
+}
+
+.fila-botones-nombre {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.boton-chip {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 2px solid rgba(255, 248, 231, 0.4);
+  background: #17D9C4;
+  color: #0A2A26;
+  cursor: pointer;
+}
+
+.boton-chip-secundario {
+  background: transparent;
+  color: #FFF8E7;
+}
+
+.panel-ranking {
+  width: 100%;
+  max-width: 260px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  padding: 10px 16px;
+  margin: 4px 0;
+}
+
+.titulo-ranking {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  opacity: 0.75;
+}
+
+#lista-ranking {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+#lista-ranking li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  padding: 2px 4px;
+}
+
+#lista-ranking li.puesto-propio {
+  color: #FFD23F;
+  font-weight: 800;
+}
+
+#lista-ranking .nombre-ranking {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
 }
 
 @keyframes parpadear {

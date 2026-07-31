@@ -28,6 +28,11 @@ const entrada = {
 
   // --- Teclado ---
   window.addEventListener('keydown', (ev) => {
+    // Si se está escribiendo en un campo de texto (el nombre para el
+    // ranking), ninguna tecla del juego debe hacer nada — si no, un
+    // espacio al escribir el nombre saltaría, y un Enter reiniciaría.
+    if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+
     if (ev.repeat) return; // ignorar autorepetición: si no, mantener espacio = salto doble gratis
 
     if (ev.code === 'Space' || ev.code === 'ArrowUp' || ev.code === 'KeyW') {
@@ -79,6 +84,11 @@ const entrada = {
   document.getElementById('pantalla-fin').addEventListener('pointerdown', (ev) => {
     ev.preventDefault();
     saltarDesde('toque');
+  });
+  // El panel para escribir el nombre va DENTRO de la pantalla de fin:
+  // tocar el campo o sus botones no debe reiniciar la partida.
+  document.getElementById('panel-nombre').addEventListener('pointerdown', (ev) => {
+    ev.stopPropagation();
   });
   // Tocar la pantalla de pausa reanuda, igual que el botón o la tecla P.
   document.getElementById('pantalla-pausa').addEventListener('pointerdown', (ev) => {

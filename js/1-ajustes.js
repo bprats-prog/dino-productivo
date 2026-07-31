@@ -8,6 +8,15 @@
 
 const AJUSTES = {
 
+  // --- Ranking online (Supabase). La clave es pública a propósito: está
+  // pensada para ir en el navegador (por eso el nombre "publishable") y
+  // solo permite leer el ranking y llamar a una función que valida en el
+  // servidor — nunca insertar directamente. Ver 7-records.js. ---
+  supabase: {
+    url: 'https://xtjhnbnhrdzdawxjpuni.supabase.co',
+    clavePublica: 'sb_publishable_Eq1TJQhHJyEmLyxEUgz8sg_Z5MyQ0Tl',
+  },
+
   // --- Lienzo lógico (el juego siempre "piensa" en este tamaño,
   //     luego se escala a la pantalla real, ver 4-dibujo.js) ---
   anchoLogico: 960,

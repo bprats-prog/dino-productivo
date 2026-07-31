@@ -14,6 +14,9 @@
   const pantallaPausa = document.getElementById('pantalla-pausa');
   const pantallaFin = document.getElementById('pantalla-fin');
   const botonSilencio = document.getElementById('boton-silencio');
+  const panelNombre = document.getElementById('panel-nombre');
+  const inputNombre = document.getElementById('input-nombre');
+  const listaRanking = document.getElementById('lista-ranking');
 
   let estado = 'portada'; // "portada" | "jugando" | "pausa" | "fin"
 
@@ -313,16 +316,61 @@
     cambiarEstado('fin');
     Sonido.finDePartida();
     document.getElementById('fin-consejo').textContent = consejoParaEstaPartida();
-    const partida = {
+    ultimaPartida = {
       puntos: puntuacion,
       cafes: cafesRecogidos,
       segundos: tiempoDePartida,
     };
-    Records.guardarPuntuacion(partida).then(() => {
+    Records.guardarPuntuacion(ultimaPartida).then(() => {
       record = Records.mejorPropio();
       document.getElementById('fin-puntuacion').textContent = Math.floor(puntuacion);
       document.getElementById('fin-record').textContent = Math.floor(record);
+      actualizarRanking();
     });
+    // Si aún no tenemos nombre, lo pedimos: la partida ya se guardó en
+    // local, y en cuanto haya nombre (o se salte) se envía al ranking.
+    panelNombre.classList.toggle('oculto', !!Records.obtenerNombreGuardado());
+    if (!Records.obtenerNombreGuardado()) {
+      inputNombre.value = '';
+      setTimeout(() => inputNombre.focus(), 50);
+    }
+  }
+
+  let ultimaPartida = null;
+
+  async function actualizarRanking() {
+    const mejores = await Records.pedirMejores(10);
+    listaRanking.innerHTML = '';
+    if (mejores.length === 0) {
+      const li = document.createElement('li');
+      li.textContent = 'Aún no hay nadie en el ranking. ¡Sé el primero!';
+      listaRanking.appendChild(li);
+      return;
+    }
+    const miNombre = Records.obtenerNombreGuardado();
+    mejores.forEach((fila, i) => {
+      const li = document.createElement('li');
+      if (fila.nombre === miNombre && fila.puntos === Math.floor(puntuacion)) {
+        li.classList.add('puesto-propio');
+      }
+      const spanNombre = document.createElement('span');
+      spanNombre.className = 'nombre-ranking';
+      spanNombre.textContent = `${i + 1}. ${fila.nombre}`; // textContent: nunca innerHTML, es dato de otros jugadores
+      const spanPuntos = document.createElement('span');
+      spanPuntos.textContent = Math.floor(fila.puntos);
+      li.appendChild(spanNombre);
+      li.appendChild(spanPuntos);
+      listaRanking.appendChild(li);
+    });
+  }
+
+  async function confirmarNombre(nombreElegido) {
+    const nombre = Records.guardarNombre(nombreElegido);
+    panelNombre.classList.add('oculto');
+    if (ultimaPartida) {
+      await Records.enviarPuntuacionRemota(nombre, ultimaPartida);
+      actualizarRanking();
+    }
   }
 
   // Un consejo distinto según cómo haya ido la partida — el primero que
@@ -497,6 +545,18 @@
 
   botonSilencio.textContent = Sonido.estaSilenciado() ? '🔇' : '🔊';
   document.getElementById('record-portada').textContent = Math.floor(record);
+
+  document.getElementById('boton-guardar-nombre').addEventListener('pointerdown', (ev) => {
+    ev.preventDefault();
+    confirmarNombre(inputNombre.value);
+  });
+  document.getElementById('boton-saltar-nombre').addEventListener('pointerdown', (ev) => {
+    ev.preventDefault();
+    confirmarNombre('Anónimo');
+  });
+  inputNombre.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') { ev.preventDefault(); confirmarNombre(inputNombre.value); }
+  });
 
   reiniciarPartida();
   requestAnimationFrame((t) => { tiempoAnterior = t; requestAnimationFrame(bucle); });

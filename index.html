@@ -43,7 +43,22 @@
       <p class="puntuacion-final"><span id="fin-puntuacion">0</span></p>
       <p class="record">Récord: <span id="fin-record">0</span></p>
       <p class="consejo" id="fin-consejo"></p>
-      <p class="parpadeo">Pulsa espacio, Enter o toca para volver a intentarlo</p>
+
+      <div id="panel-nombre" class="panel-nombre oculto">
+        <p>¿Cómo te llamas para el ranking?</p>
+        <input id="input-nombre" maxlength="12" placeholder="Tu nombre" autocomplete="off" />
+        <div class="fila-botones-nombre">
+          <button id="boton-guardar-nombre" class="boton-chip">Guardar</button>
+          <button id="boton-saltar-nombre" class="boton-chip boton-chip-secundario">Jugar como Anónimo</button>
+        </div>
+      </div>
+
+      <div id="panel-ranking" class="panel-ranking">
+        <p class="titulo-ranking">TOP 10</p>
+        <ol id="lista-ranking"></ol>
+      </div>
+
+      <p class="parpadeo" id="texto-reintentar">Pulsa espacio, Enter o toca para volver a intentarlo</p>
     </div>
   </div>
 
