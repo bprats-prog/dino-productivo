@@ -24,6 +24,11 @@ const Sonido = (() => {
   window.addEventListener('pointerdown', asegurarContexto, { once: true });
   window.addEventListener('keydown', asegurarContexto, { once: true });
 
+  // Vibración táctil (móvil). Si el navegador no la soporta, no hace nada.
+  function vibrar(patron) {
+    if (navigator.vibrate) navigator.vibrate(patron);
+  }
+
   function pitido({ frecuenciaInicial, frecuenciaFinal, duracion, forma = 'square', volumen = 0.2 }) {
     if (!contexto) return;
     const osc = contexto.createOscillator();
@@ -45,18 +50,36 @@ const Sonido = (() => {
   return {
     saltar() {
       pitido({ frecuenciaInicial: 380, frecuenciaFinal: 620, duracion: 0.09, forma: 'square', volumen: 0.18 });
+      vibrar(8);
     },
     saltoDoble() {
       pitido({ frecuenciaInicial: 620, frecuenciaFinal: 900, duracion: 0.08, forma: 'triangle', volumen: 0.2 });
+      vibrar([10, 20, 10]);
     },
-    cafe() {
-      pitido({ frecuenciaInicial: 880, frecuenciaFinal: 1320, duracion: 0.09, forma: 'sine', volumen: 0.18 });
+    // racha = cuántos cafés seguidos llevas sin chocar (1 = el primero).
+    // El tono sube con la racha: recoger varios de seguido "suena" mejor.
+    cafe(racha = 1) {
+      const subida = Math.min((racha - 1) * 60, 480);
+      pitido({ frecuenciaInicial: 880 + subida, frecuenciaFinal: 1320 + subida * 1.5, duracion: 0.09, forma: 'sine', volumen: 0.18 });
+      vibrar(12);
     },
     choque() {
       pitido({ frecuenciaInicial: 220, frecuenciaFinal: 90, duracion: 0.22, forma: 'sawtooth', volumen: 0.22 });
+      vibrar(35);
+    },
+    // Espresso doble: dos pitidos rápidos y más ricos que un café normal.
+    espresso() {
+      pitido({ frecuenciaInicial: 700, frecuenciaFinal: 1100, duracion: 0.1, forma: 'sawtooth', volumen: 0.16 });
+      setTimeout(() => pitido({ frecuenciaInicial: 1000, frecuenciaFinal: 1600, duracion: 0.12, forma: 'sine', volumen: 0.2 }), 70);
+      vibrar([15, 30, 15, 30, 15]);
     },
     energiaCritica() {
       pitido({ frecuenciaInicial: 220, duracion: 0.06, forma: 'sine', volumen: 0.12 });
+    },
+    // "Marcha atrás": un barrido hacia abajo, como un rebobinado.
+    reversa() {
+      pitido({ frecuenciaInicial: 500, frecuenciaFinal: 130, duracion: 0.35, forma: 'triangle', volumen: 0.18 });
+      vibrar([20, 40, 20]);
     },
     finDePartida() {
       [523, 440, 349, 262].forEach((f, i) => {

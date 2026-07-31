@@ -57,6 +57,16 @@ html, body {
   touch-action: none;
 }
 
+.boton-agachar {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  width: 56px;
+  height: 56px;
+  font-size: 24px;
+  z-index: 5;
+}
+
 .pantalla {
   position: absolute;
   inset: 0;
@@ -115,6 +125,14 @@ html, body {
   font-weight: 900;
   color: #FFD23F;
   margin: 4px 0;
+}
+
+.consejo {
+  font-size: clamp(12px, 2vw, 14px);
+  max-width: 34ch;
+  line-height: 1.4;
+  opacity: 0.85;
+  margin: 2px 0;
 }
 
 .parpadeo {

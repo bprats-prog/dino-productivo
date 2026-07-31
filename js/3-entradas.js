@@ -8,6 +8,7 @@
 const entrada = {
   saltarPulsadoEsteFrame: false,  // flanco de pulsación (solo el instante en que se pulsa)
   saltarMantenido: false,          // se mantiene pulsado (para el salto sostenido)
+  agacharMantenido: false,        // flecha abajo / S / botón ⬇, se mantiene pulsado
   pausaPulsada: false,
   silencioPulsado: false,
   reiniciarPulsado: false,
@@ -32,6 +33,9 @@ const entrada = {
     if (ev.code === 'Space' || ev.code === 'ArrowUp' || ev.code === 'KeyW') {
       ev.preventDefault();
       saltarDesde('teclado');
+    } else if (ev.code === 'ArrowDown' || ev.code === 'KeyS') {
+      ev.preventDefault();
+      entrada.agacharMantenido = true;
     } else if (ev.code === 'KeyP' || ev.code === 'Escape') {
       entrada.pausaPulsada = true;
     } else if (ev.code === 'KeyM') {
@@ -44,6 +48,8 @@ const entrada = {
   window.addEventListener('keyup', (ev) => {
     if (ev.code === 'Space' || ev.code === 'ArrowUp' || ev.code === 'KeyW') {
       soltarSalto();
+    } else if (ev.code === 'ArrowDown' || ev.code === 'KeyS') {
+      entrada.agacharMantenido = false;
     }
   });
 
@@ -92,6 +98,19 @@ const entrada = {
     ev.stopPropagation();
     entrada.silencioPulsado = true;
   });
+
+  // Botón de agacharse (móvil): se mantiene agachado mientras se mantiene
+  // pulsado, igual que la flecha abajo en teclado.
+  const botonAgachar = document.getElementById('boton-agachar');
+  botonAgachar.addEventListener('pointerdown', (ev) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    entrada.agacharMantenido = true;
+  });
+  const soltarAgachar = (ev) => { ev.preventDefault(); entrada.agacharMantenido = false; };
+  botonAgachar.addEventListener('pointerup', soltarAgachar);
+  botonAgachar.addEventListener('pointercancel', soltarAgachar);
+  botonAgachar.addEventListener('pointerleave', soltarAgachar);
 })();
 
 // Se llama una vez al final de cada fotograma para limpiar los "flancos"

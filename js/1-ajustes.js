@@ -38,6 +38,12 @@ const AJUSTES = {
     bufferSaltoMs: 120,  // si pulsas un poco antes de aterrizar, el salto no se pierde
 
     invulnerabilidadMs: 1200,  // tras un choque, no puedes chocar otra vez
+
+    // Agacharse (flecha abajo / S / botón ⬇): solo cambia la caja de
+    // colisión, nunca la física — los pies se quedan siempre en el mismo
+    // sitio, es la "cabeza" la que baja. Solo vale estando en el suelo.
+    altoAgachado: 32,
+    margenHitboxArribaAgachado: 4,
   },
 
   // --- Energía (la "vida" del juego) ---
@@ -54,13 +60,49 @@ const AJUSTES = {
     velocidadInicial: 340,     // px/s
     velocidadMaxima: 640,      // px/s
     aceleracionPorSegundo: 12, // px/s, hasta llegar al máximo
+
+    // "Marcha atrás": de vez en cuando el mundo entero retrocede unos
+    // segundos (algo tira de ti hacia atrás). No genera obstáculos nuevos
+    // mientras dura, pero los que ya habían pasado pueden volver a
+    // aparecer por detrás — es justo la gracia del evento.
+    reversaPrimeraEnSegundos: 18,
+    reversaSeparacionMinimaSegundos: 28,
+    reversaSeparacionMaximaSegundos: 45,
+    reversaDuracionSegundos: 3,
+    reversaFactorVelocidad: 0.6, // va hacia atrás al 60% de la velocidad que llevaba
   },
 
-  // --- Generación de obstáculos (los 4 van SIEMPRE en el suelo, se saltan todos) ---
+  // --- Generación de obstáculos (los 4+2 van SIEMPRE en el suelo, se saltan todos) ---
   generador: {
     separacionMinimaSegundos: 0.85, // nunca menos tiempo de reacción que esto
     separacionMaximaSegundos: 1.6,
     sinObstaculosAlEmpezarSegundos: 2.5,
+
+    // Un obstáculo no se borra en cuanto sale de pantalla por la
+    // izquierda: se queda "esperando" ahí un margen amplio, para que la
+    // marcha atrás pueda traerlo de vuelta (máximo alcance de una reversa:
+    // 3s a 640*0.6=384px/s = 1152px; 1400 deja margen de sobra).
+    margenBorradoObstaculosPx: 1400,
+
+    // --- Tramos de dificultad por TIEMPO de partida, no solo por velocidad.
+    // 0-30s: obstáculos sueltos. 30-75s: empiezan las parejas del mismo
+    // tipo. 75s+: además parejas mezcladas y plataformas más seguidas.
+    // 135s+: "hora punta" (ver horaPunta* abajo).
+    tramo2Segundos: 30,
+    tramo3Segundos: 75,
+    tramo4Segundos: 135,
+
+    // Huecos cortos DENTRO de una pareja/grupo (no confundir con la
+    // separación de arriba, que es el hueco ENTRE grupos).
+    huecoParejaSegundos: 0.35,
+    huecoParejaMezclaSegundos: 0.45,
+
+    // Hora punta: ciclo que se repite para siempre a partir de tramo4:
+    // unos segundos de ráfaga intensa + un respiro con cafés de regalo.
+    horaPuntaRafagaSegundos: 4,
+    horaPuntaRespiroSegundos: 3,
+    separacionMinimaHoraPuntaSegundos: 0.55,
+    separacionMaximaHoraPuntaSegundos: 0.85,
   },
 
   // --- Plataformas en altura con cafés (solo se llega con salto doble) ---
@@ -75,6 +117,9 @@ const AJUSTES = {
     primeraEnSegundos: 4,
     separacionMinimaSegundos: 6,
     separacionMaximaSegundos: 9,
+    // Desde el tramo 3 (75s), las plataformas se suceden más seguidas.
+    separacionMinimaSegundosTardia: 4,
+    separacionMaximaSegundosTardia: 6,
     // Hueco mínimo respecto al último obstáculo generado, para que
     // siempre haya una recta despejada donde preparar el salto doble.
     margenSeguridadTrasObstaculoSegundos: 1.1,
@@ -85,6 +130,19 @@ const AJUSTES = {
     energiaQueDa: 20,
     puntosQueDa: 50,
     porPlataforma: 4,
+    // Imán suave: dentro de este radio, el café se deja atraer hacia el
+    // dino en vez de exigir un toque exacto (perdona el "casi lo tengo").
+    radioAtraccion: 34,
+    velocidadAtraccion: 260, // px/s
+    // Racha de cafés sin chocar: multiplica los puntos del café.
+    umbralRacha2: 10,
+    umbralRacha3: 25,
+    // Espresso doble: un café raro (en vez de uno normal, en una plataforma)
+    // que rellena la energía al máximo, da el doble de puntos y regala unos
+    // segundos de invulnerabilidad. No desequilibra: es tan escaso que no
+    // se puede planear alrededor de él, solo disfrutarlo si aparece.
+    probabilidadEspresso: 0.12,
+    invulnerabilidadEspressoMs: 2500,
   },
 
   // --- Puntuación ---
@@ -92,11 +150,33 @@ const AJUSTES = {
     puntosPorPixel: 1 / 10, // 1 punto cada 10 px recorridos
   },
 
+  // --- Ciclo de día completo (amanecer -> mediodía -> atardecer -> noche
+  // -> vuelve a amanecer), en bucle para siempre según tiempo de partida.
+  // Momentos en SEGUNDOS de partida, no fracciones: así "de noche al
+  // minuto 1" es literal y no hay que hacer cuentas para tocarlo. ---
+  dia: {
+    amanecerEn: 0,
+    mediodiaEn: 20,
+    atardecerEn: 40,
+    nocheEn: 60,            // de noche justo al minuto de partida, como se pidió
+    empiezaAAclararEn: 75,  // se queda de noche un rato antes de volver a clarear
+    duracionSegundos: 90,   // ahí se cierra el ciclo y vuelve a amanecer
+  },
+
   // --- Paleta de color (formas planas, vibrantes) ---
   color: {
+    // Cielo de mediodía (color base). Amanecer/atardecer se mezclan con
+    // este según cuánto lleves de partida — ver dibujarFondo en 4-dibujo.js.
     cieloArriba: '#29C2F0',
     cieloAbajo: '#9BEBF7',
+    cieloArribaAmanecer: '#8FD6F0',
+    cieloAbajoAmanecer: '#FFD9C2',
+    cieloArribaAtardecer: '#FF9966',
+    cieloAbajoAtardecer: '#FFD3A6',
+    cieloArribaNoche: '#0B1533',
+    cieloAbajoNoche: '#2C3E6B',
     sol: '#FFE066',
+    luna: '#E8EDF5',
     colinasLejanas: '#7FD1B5',
     copasLejanas: '#56BF8E',
     arbolesMedios: '#2F8F5B',
@@ -131,10 +211,21 @@ const AJUSTES = {
     pizzaCorteza: '#C9702A',
     pizzaPepperoni: '#E8332B',
 
-    bandejaCuerpo: '#2B3A55',
-    bandejaFrontal: '#3E5273',
-    bandejaSobres: '#FFF1D0',
+    // Bandeja de entrada = sobre estilo Gmail (icono que pasó la clienta)
+    bandejaCuerpo: '#FFFFFF',
+    bandejaPliegue: '#EA4335',
+    bandejaPliegueOscuro: '#C5221F',
     bandejaBadge: '#FF3B30',
+
+    slackCuerpo: '#7C3FE4',
+    slackCuerpoApagado: '#B7A0EE',
+    slackNotificacion: '#FF3B30',
+
+    reunionCabecera: '#FF6B4A',
+    reunionUrgencia: '#E63946',
+
+    cableCuerpo: '#3E4A52',
+    cableAviso: '#FFC93C',
 
     plataformaCara: '#E0B074',
     plataformaLuz: '#F2CE9A',
@@ -147,6 +238,8 @@ const AJUSTES = {
     cafeLiquido: '#6B3E1E',
     cafeFranja: '#17D9C4',
     cafeHalo: 'rgba(255,213,79,0.55)',
+    cafeEspressoHalo: 'rgba(255,107,74,0.6)',
+    cafeEspressoRayo: '#FFD23F',
 
     energiaLlena: '#17D9C4',
     energiaMedia: '#FFC93C',
